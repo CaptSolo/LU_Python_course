@@ -4,13 +4,14 @@ Data visualization is not decoration. It is a way to reason with data, expose pa
 
 ## Learning goals
 
-By the end of this day, students should be able to:
+By the end of this topic, students should be able to:
 
 - Explain why visualizations have been important in science, public policy, journalism, and statistics.
 - Recognize several historical milestones in data visualization.
 - Choose common chart types based on the task, not based on what looks impressive.
 - Write a clear visualization goal before plotting.
 - Improve charts by using clear labels, appropriate scales, meaningful color, and minimal distraction.
+- Select appropriate Python visualization libraries for exploratory analysis, publication charts, interactive charts, maps, and text-analysis visuals.
 
 ## Historical foundations
 
@@ -92,14 +93,142 @@ Common distractions:
 
 The goal is not minimalism for its own sake. The goal is to make the evidence easier to read.
 
-## Suggested day 2 flow
+## Python visualization libraries
+
+Python has a large visualization ecosystem. For this course, the main libraries should be Matplotlib, Seaborn, and Plotly because they cover most everyday needs: static plots, statistical exploration, and interactive charts.
+
+| Library | Install | Best use | Official documentation |
+| --- | --- | --- | --- |
+| Matplotlib | `pip install matplotlib` | The foundational plotting library. Use it for precise static charts, subplot layouts, custom annotations, and publication-style control. | <https://matplotlib.org/stable/> |
+| Seaborn | `pip install seaborn` | High-level statistical visualization built on Matplotlib. Use it for distributions, categorical comparisons, regression views, heatmaps, and quick exploratory charts. | <https://seaborn.pydata.org/> |
+| Plotly | `pip install plotly` | Interactive web-native charts. Use it when hover tooltips, zooming, filtering, animation, or HTML export improves the result. | <https://plotly.com/python/> |
+
+### Matplotlib
+
+Matplotlib is the base layer for much of the Python visualization stack. It is verbose compared with some newer libraries, but it gives strong control over figure size, axes, ticks, annotations, legends, color maps, and export formats. It is a good default when the final output is a static image for a report, slide deck, PDF, or paper.
+
+Use Matplotlib when:
+
+- You need exact control over every part of the figure.
+- You are building multi-panel figures with several axes.
+- You need a stable dependency that many other libraries understand.
+- You want to save charts as PNG, SVG, or PDF with predictable formatting.
+
+### Seaborn
+
+Seaborn is designed for statistical graphics and works especially well with tidy pandas DataFrames. It reduces repetitive Matplotlib code and provides good defaults for common analysis tasks.
+
+Use Seaborn when:
+
+- You are comparing distributions across groups.
+- You need box plots, violin plots, histograms, density plots, pair plots, or categorical plots.
+- You want quick exploratory analysis with consistent styling.
+- You want confidence intervals or aggregation behavior built into higher-level plotting functions.
+
+### Plotly
+
+Plotly creates interactive figures that display well in Jupyter notebooks and can be exported to HTML. Plotly Express is the easiest entry point because it maps DataFrame columns directly to visual encodings such as `x`, `y`, `color`, `size`, `facet_col`, and `animation_frame`.
+
+Use Plotly when:
+
+- The reader benefits from hover details or zooming.
+- The chart has many points and static labels would become cluttered.
+- You want to publish a self-contained HTML chart.
+- You are building interactive dashboards or prototypes.
+
+## Integration with pandas
+
+Pandas is usually the data preparation layer. Most visualization work should start with a clean DataFrame: columns should have meaningful names, data types should be correct, missing values should be understood, and categories should be ordered when order matters.
+
+Common integration patterns:
+
+- Pandas has built-in plotting through `DataFrame.plot()` and `Series.plot()`. These methods use Matplotlib by default and are useful for quick exploratory charts.
+- Seaborn accepts pandas DataFrames through the `data=` parameter and column names through arguments such as `x=`, `y=`, `hue=`, `row=`, and `col=`.
+- Plotly Express accepts DataFrames directly and uses column names for axes, colors, facets, hover data, and animation frames.
+- GeoPandas extends pandas with geometry columns. It provides spatial operations while keeping a DataFrame-like workflow.
+- Many specialty libraries accept pandas DataFrames directly or can consume columns converted to lists, NumPy arrays, or dictionaries.
+
+Example workflow:
+
+```python
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("data.csv")
+summary = (
+    df.groupby("category", as_index=False)
+      .agg(mean_value=("value", "mean"))
+      .sort_values("mean_value", ascending=False)
+)
+
+sns.barplot(data=summary, x="mean_value", y="category")
+plt.xlabel("Mean value")
+plt.ylabel("Category")
+plt.title("Mean value by category")
+plt.tight_layout()
+```
+
+For Plotly:
+
+```python
+import plotly.express as px
+
+fig = px.bar(
+    summary,
+    x="mean_value",
+    y="category",
+    orientation="h",
+    title="Mean value by category",
+)
+fig.show()
+```
+
+## Specialty visualization libraries
+
+These libraries are optional. Add them when the task clearly needs their strengths instead of forcing everything into a basic chart.
+
+| Area | Library | Install | Use when | Official documentation |
+| --- | --- | --- | --- | --- |
+| Geospatial analysis | GeoPandas | `pip install geopandas` | You need pandas-like work with shapefiles, GeoJSON, spatial joins, projections, or choropleth maps. | <https://geopandas.org/en/stable/> |
+| Interactive web maps | Folium | `pip install folium` | You want Leaflet-based interactive maps in notebooks or HTML, especially markers, choropleths, and map tiles. | <https://python-visualization.github.io/folium/latest/> |
+| Basemap tiles | Contextily | `pip install contextily` | You have GeoPandas or Matplotlib maps and want OpenStreetMap-style background tiles. | <https://contextily.readthedocs.io/en/latest/> |
+| Map projections | Cartopy | `pip install cartopy` | You need scientific maps, projections, coordinate transforms, or global/regional geospatial plotting on Matplotlib. | <https://cartopy.readthedocs.io/stable/> |
+| Text visualization | wordcloud | `pip install wordcloud` | You want a quick visual summary of frequent terms in text data. Use it as an exploratory supplement, not as a precise statistical chart. | <https://amueller.github.io/word_cloud/> |
+| Topic modeling | pyLDAvis | `pip install pyLDAvis` | You need to inspect LDA topic models, topic distances, and high-probability terms interactively. | <https://pyldavis.readthedocs.io/en/latest/> |
+| Declarative charts | Altair | `pip install altair` | You want concise grammar-of-graphics style charts based on Vega-Lite, especially for clean notebook examples. | <https://altair-viz.github.io/> |
+| Browser dashboards | Bokeh | `pip install bokeh` | You need interactive browser plots, linked brushing, streaming data, or custom dashboard-style applications. | <https://docs.bokeh.org/en/latest/> |
+| Missing-data inspection | missingno | `pip install missingno` | You want fast visual checks of missing-value patterns before cleaning a DataFrame. | <https://github.com/ResidentMario/missingno> |
+| Network graphs | NetworkX | `pip install networkx` | You need graph analysis and basic graph drawing for relationships such as links, dependencies, or social networks. | <https://networkx.org/documentation/stable/reference/drawing.html> |
+| Machine-learning diagnostics | Yellowbrick | `pip install yellowbrick` | You want visual diagnostics for scikit-learn models, such as residual plots, classification reports, feature importance, or clustering diagnostics. | <https://www.scikit-yb.org/en/latest/> |
+
+For geospatial libraries on Windows, `conda` can sometimes be easier than `pip` because packages such as GeoPandas, Cartopy, rasterio, pyproj, and shapely depend on compiled geospatial libraries:
+
+```bash
+conda install -c conda-forge geopandas folium contextily cartopy
+```
+
+For a lightweight notebook setup focused on the main course tools:
+
+```bash
+pip install pandas matplotlib seaborn plotly
+```
+
+For optional NLP and topic-modeling visualization:
+
+```bash
+pip install wordcloud pyLDAvis
+```
+
+## Suggested topic flow
 
 1. Start with the historical examples: Playfair, Snow, Nightingale, Minard, Du Bois, Bertin, Tufte, Cleveland and McGill.
 2. Discuss what question each visualization answered and what action or argument it supported.
 3. Practice writing a goal sentence before plotting.
 4. Match tasks to chart types using the chart-selection table.
 5. Redesign a cluttered chart by improving labels, scale, color, and focus.
-6. Build or improve one visualization in Python and explain the design choices.
+6. Compare Matplotlib, Seaborn, and Plotly for the same simple DataFrame.
+7. Build or improve one visualization in Python and explain the design choices.
 
 ## References
 
@@ -120,3 +249,18 @@ Links verified on 2026-05-12.
 - Financial Times Visual Journalism Team. "Financial Times Visual Vocabulary." <https://github.com/Financial-Times/chart-doctor/tree/main/visual-vocabulary>
 - W3C Web Accessibility Initiative. "Understanding Success Criterion 1.4.1: Use of Color." <https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html>
 - Brewer, Cynthia, Mark Harrower, and The Pennsylvania State University. "ColorBrewer 2.0." <https://colorbrewer2.org/>
+- pandas. "Chart visualization." <https://pandas.pydata.org/docs/user_guide/visualization.html>
+- Matplotlib. "Matplotlib documentation." <https://matplotlib.org/stable/>
+- Seaborn. "seaborn: statistical data visualization." <https://seaborn.pydata.org/>
+- Plotly. "Plotly Python Graphing Library." <https://plotly.com/python/>
+- GeoPandas. "GeoPandas documentation." <https://geopandas.org/en/stable/>
+- Folium. "Folium documentation." <https://python-visualization.github.io/folium/latest/>
+- Contextily. "contextily: context geo tiles in Python." <https://contextily.readthedocs.io/en/latest/>
+- Cartopy. "Cartopy documentation." <https://cartopy.readthedocs.io/stable/>
+- wordcloud. "WordCloud for Python documentation." <https://amueller.github.io/word_cloud/>
+- pyLDAvis. "pyLDAvis documentation." <https://pyldavis.readthedocs.io/en/latest/>
+- Vega-Altair. "Vega-Altair: Declarative Visualization in Python." <https://altair-viz.github.io/>
+- Bokeh. "Bokeh documentation." <https://docs.bokeh.org/en/latest/>
+- missingno. "Missing data visualization module for Python." <https://github.com/ResidentMario/missingno>
+- NetworkX. "Drawing." <https://networkx.org/documentation/stable/reference/drawing.html>
+- Yellowbrick. "Yellowbrick: Machine Learning Visualization." <https://www.scikit-yb.org/en/latest/>
